@@ -1,0 +1,51 @@
+name:                ho-rewriting
+version:             0.1
+synopsis:            Generic rewrite rules with safe treatment of variables and binders
+-- description:
+homepage:            https://github.com/emilaxelsson/ho-rewriting
+license:             BSD3
+license-file:        LICENSE
+author:              Emil Axelsson
+maintainer:          emax@chalmers.se
+copyright:           Copyright Emil Axelsson 2015
+category:            Data
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  exposed-modules:
+      Data.Rewriting.Rules
+      Data.Rewriting.FirstOrder
+      Data.Rewriting.HigherOrder
+
+  hs-source-dirs:
+    src
+
+  build-depends:
+    base >=4.7 && <4.8,
+    containers,
+    compdata >=0.9,
+    mtl,
+    patch-combinators
+
+  other-extensions:
+    DeriveFoldable
+    DeriveFunctor
+    DeriveTraversable
+    FlexibleContexts
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    NoMonomorphismRestriction
+    StandaloneDeriving
+    TemplateHaskell
+    TypeFamilies
+    TypeOperators
+    UndecidableInstances
+    GADTs
+    ScopedTypeVariables
+    RankNTypes
+    TupleSections
+
+  default-language:
+    Haskell2010
