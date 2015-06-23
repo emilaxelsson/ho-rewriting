@@ -14,21 +14,29 @@ description:         This package gives a generic implementation of higher-order
                      .
                        * Slides: <http://www.cse.chalmers.se/~emax/documents/axelsson2015lightweight_slides.pdf>
 homepage:            https://github.com/emilaxelsson/ho-rewriting
+bug-reports:         https://github.com/emilaxelsson/ho-rewriting/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Emil Axelsson
 maintainer:          emax@chalmers.se
-copyright:           Copyright Emil Axelsson 2015
-category:            Data
+copyright:           Copyright (c) 2015, Emil Axelsson
+category:            Language
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
+extra-source-files:
+  examples/*.hs
+
+source-repository head
+  type:     git
+  location: https://github.com/emilaxelsson/ho-rewriting
+
 library
   exposed-modules:
-      Data.Rewriting.Rules
-      Data.Rewriting.FirstOrder
-      Data.Rewriting.HigherOrder
+    Data.Rewriting.Rules
+    Data.Rewriting.FirstOrder
+    Data.Rewriting.HigherOrder
 
   hs-source-dirs:
     src
