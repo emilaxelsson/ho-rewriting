@@ -12,10 +12,6 @@
 
 {-# OPTIONS_GHC -fno-warn-missing-methods #-}
 
-module Feldspar where
-
-
-
 import Data.Comp
 import Data.Comp.Derive
 import Data.Comp.Render
@@ -26,6 +22,8 @@ import Data.Rewriting.HigherOrder
 import Simple
 
 
+
+main = return () -- For `cabal test`
 
 data FORLOOP a = ForLoop a a a
   deriving (Eq, Show, Functor, Foldable, Traversable)

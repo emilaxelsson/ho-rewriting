@@ -49,3 +49,18 @@ library
 
   default-language:
     Haskell2010
+
+test-suite examples
+  type: exitcode-stdio-1.0
+
+  hs-source-dirs: examples
+
+  main-is: Feldspar.hs
+
+  build-depends:
+    base,
+    compdata,
+    ho-rewriting,
+    patch-combinators
+
+  default-language: Haskell2010
