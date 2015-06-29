@@ -80,8 +80,12 @@ rulesFeld = rules ++
     , quantify rule_for3
     ]
 
+
 stripAnn :: Functor f => Term (f :&: a) -> Term f
 stripAnn = cata (\(f :&: _) -> Term f)
+
+simplify :: Data a -> Data a
+simplify = Data . stripAnn . bottomUp app rulesFeld . unData
 
 forExample :: Data Int -> Data Int
 forExample a
@@ -89,29 +93,29 @@ forExample a
     + forLoop a a (\i s -> i*i+100)
 
 drawForExample  = drawTerm $ unData $ lam forExample
-drawForExampleR = drawTerm $ stripAnn $ bottomUp app rulesFeld $ unData $ lam forExample
+drawForExampleR = drawTerm $ unData $ simplify $ lam forExample
 
 feld1 :: Data Int -> Data Int
 feld1 a = a + a + 3
 
 drawFeld1  = drawTerm $ unData $ lam feld1
-drawFeld1R = drawTerm $ stripAnn $ bottomUp app rulesFeld $ unData $ lam feld1
+drawFeld1R = drawTerm $ unData $ simplify $ lam feld1
 
 feld2 :: Data Int
 feld2 = forLoop 0 0 (+)
 
 drawFeld2  = drawTerm $ unData feld2
-drawFeld2R = drawTerm $ stripAnn $ bottomUp app rulesFeld $ unData feld2
+drawFeld2R = drawTerm $ unData $ simplify feld2
 
 feld3 :: Data Int -> Data Int
 feld3 a = forLoop a 0 (\i s -> a+i)
 
 drawFeld3  = drawTerm $ unData $ lam feld3
-drawFeld3R = drawTerm $ stripAnn $ bottomUp app rulesFeld $ unData $ lam feld3
+drawFeld3R = drawTerm $ unData $ simplify $ lam feld3
 
 feld4 :: Data Int -> Data Int
 feld4 a = forLoop a 0 (\i s -> a + i + s) + forLoop a 0 (\i s -> a + i + s)
 
 drawFeld4  = drawTerm $ unData $ lam feld4
-drawFeld4R = drawTerm $ stripAnn $ bottomUp app rulesFeld $ unData $ lam feld4
+drawFeld4R = drawTerm $ unData $ simplify $ lam feld4
 
