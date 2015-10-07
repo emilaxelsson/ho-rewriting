@@ -8,7 +8,7 @@ description:         This package gives a generic implementation of higher-order
                      .
                      Some examples are found in the @examples@ directory. For
                      more information, see
-                     "Lightweight Higher-Order Rewriting in Haskell" (presented at TFP 2015):
+                     \"Lightweight Higher-Order Rewriting in Haskell\" (presented at TFP 2015):
                      .
                        * Paper: <http://www.cse.chalmers.se/~emax/documents/axelsson2015lightweight_DRAFT.pdf>
                      .
