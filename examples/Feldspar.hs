@@ -80,7 +80,6 @@ rulesFeld = rules ++
     , quantify rule_for3
     ]
 
-
 stripAnn :: Functor f => Term (f :&: a) -> Term f
 stripAnn = cata (\(f :&: _) -> Term f)
 

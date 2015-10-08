@@ -21,6 +21,7 @@ import Data.Comp
 import Data.Comp.Derive
 import Data.Comp.Render
 import Data.Patch
+  -- Could use partial type signatures instead (on GHC >= 7.10)
 
 import Data.Rewriting.Rules
 import Data.Rewriting.FirstOrder
@@ -31,10 +32,6 @@ import Data.Rewriting.FirstOrder
 
 -- 0 + x  ===>  x
 rule_add1 x = 0 + mvar x  ===>  mvar x
-
-rule_add1
-    :: (Num (lhs a), MetaVar lhs, MetaVar rhs, MetaRep lhs ~ MetaRep rhs)
-    => MetaRep rhs a -> Rule lhs rhs
 
 -- x + x  ===>  x*2
 rule_add2 x = mvar x + mvar x  ===>  mvar x * 2
