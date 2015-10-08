@@ -251,26 +251,6 @@ substitute app subst = cataM go . unRHS
     go (Inr f) = return $ annFreeVars f
   -- TODO Should avoid capturing
 
--- | Prepare a term for rewriting by annotating each node with its set of free
--- variables
-prepare :: (VAR :<: f, LAM :<: f, Functor f, Foldable f) => Term f -> Term (f :&: Set Name)
-prepare = cata annFreeVars
-
--- | Strip out the annotations from a term
-stripAnn :: Functor f => Term (f :&: a) -> Term f
-stripAnn = cata (\(f :&: _) -> Term f)
-
--- | Apply a higher-order rewriter to a term
-withRewriter
-    :: ( VAR :<: f
-       , LAM :<: f
-       , Functor f
-       , Foldable f
-       , g ~ (f :&: Set Name)
-       )
-    => (Term g -> Term g) -> Term f -> Term f
-withRewriter rew = stripAnn . rew . prepare
-
 -- | Apply a rule. Succeeds iff. both matching and substitution succeeds.
 rewrite
     :: ( VAR :<: f
@@ -306,31 +286,26 @@ applyFirst app rs t = case [t' | r <- rs, Just t' <- [rewrite app r t]] of
     t':_ -> t'
     _    -> t
 
--- | Apply a list of rules bottom-up across a term
-bottomUp
-    :: ( VAR :<: f
-       , LAM :<: f
-       , VAR :<: PF (LHS f)
-       , LAM :<: PF (LHS f)
-       , Functor f, Foldable f, EqF f
-       , g ~ (f :&: Set Name)
-       )
-    => (Term g -> Term g)  -- ^ Node rewriter
-    -> Term g
-    -> Term g
-bottomUp rew = rew . Term . fmap (bottomUp rew) . unTerm
+-- | Prepare a term for rewriting by annotating each node with its set of free
+-- variables
+prepare :: (VAR :<: f, LAM :<: f, Functor f, Foldable f) => Term f -> Term (f :&: Set Name)
+prepare = cata annFreeVars
 
--- | Apply a list of rules top-down across a term
-topDown
+-- | Strip out the annotations from a term
+stripAnn :: Functor f => Term (f :&: a) -> Term f
+stripAnn = cata (\(f :&: _) -> Term f)
+
+-- | Apply a higher-order rewriter to a term
+--
+-- Typically used as @`withRewriter` (`bottomUp` (`applyFirst` ...)) :: (...) => Term f -> Term f@,
+-- where @f@ is not annotated
+withRewriter
     :: ( VAR :<: f
        , LAM :<: f
-       , VAR :<: PF (LHS f)
-       , LAM :<: PF (LHS f)
-       , Functor f, Foldable f, EqF f
+       , Functor f
+       , Foldable f
        , g ~ (f :&: Set Name)
        )
-    => (Term g -> Term g)  -- ^ Node rewriter
-    -> Term g
-    -> Term g
-topDown rew = Term . fmap (topDown rew) . unTerm . rew
+    => (Term g -> Term g) -> Term f -> Term f
+withRewriter rew = stripAnn . rew . prepare
 

@@ -17,6 +17,7 @@ import Data.Comp.Derive
 import Data.Comp.Render
 
 import Data.Rewriting.Rules
+import Data.Rewriting.FirstOrder hiding (applyFirst)
 import Data.Rewriting.HigherOrder
 
 import Simple

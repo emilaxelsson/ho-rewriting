@@ -81,12 +81,12 @@ applyFirst rs t = case [t' | rule <- rs, Just t' <- [rewrite rule t]] of
 -- | Apply a list of rules bottom-up across a term
 --
 -- This function assumes that there are no applications of meta-variables in `LHS` or `RHS`.
-bottomUp :: (Functor f, Foldable f, EqF f) => (Term f -> Term f) -> Term f -> Term f
+bottomUp :: Functor f => (Term f -> Term f) -> Term f -> Term f
 bottomUp rew = rew . Term . fmap (bottomUp rew) . unTerm
 
 -- | Apply a list of rules top-down across a term
 --
 -- This function assumes that there are no applications of meta-variables in `LHS` or `RHS`.
-topDown :: (Functor f, Foldable f, EqF f) => (Term f -> Term f) -> Term f -> Term f
+topDown :: Functor f => (Term f -> Term f) -> Term f -> Term f
 topDown rew = Term . fmap (topDown rew) . unTerm . rew
 
