@@ -88,7 +88,7 @@ simplify = Data . stripAnn . bottomUp app rulesFeld . unData
 
 forExample :: Data Int -> Data Int
 forExample a
-    = forLoop (a-a) a (\i s -> i*s+70)
+    = forLoop a a (\i s -> (i-i)+s)
     + forLoop a a (\i s -> i*i+100)
 
 drawForExample  = drawTerm $ unData $ lam forExample
