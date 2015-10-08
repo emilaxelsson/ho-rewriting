@@ -281,8 +281,8 @@ applyFirst
        )
     => (Term g -> Term g -> Term g)  -- ^ Application operator
     -> [Rule (LHS f) (RHS f)]
-    -> Term (f :&: Set Name)
-    -> Term (f :&: Set Name)
+    -> Term g
+    -> Term g
 applyFirst app rs t = case [t' | r <- rs, Just t' <- [rewrite app r t]] of
     t':_ -> t'
     _    -> t
@@ -296,9 +296,8 @@ bottomUp
        , Traversable f, EqF f
        , g ~ (f :&: Set Name)
        )
-    => (Term g -> Term g -> Term g)  -- ^ Application operator
-    -> [Rule (LHS f) (RHS f)]
+    => (Term g -> Term g) -- ^ Node rewriter
     -> Term f
-    -> Term (f :&: Set Name)
-bottomUp app rs = applyFirst app rs . annFreeVars . fmap (bottomUp app rs) . unTerm
+    -> Term g
+bottomUp rew = rew . annFreeVars . fmap (bottomUp rew) . unTerm
 

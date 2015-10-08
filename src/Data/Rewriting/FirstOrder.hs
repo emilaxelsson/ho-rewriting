@@ -74,19 +74,19 @@ rewrite (Rule lhs rhs) t = do
 --
 -- This function assumes that there are no applications of meta-variables in `LHS` or `RHS`.
 applyFirst :: (Traversable f, EqF f) => [Rule (LHS f) (RHS f)] -> Term f -> Term f
-applyFirst rs t = case [t' | r <- rs, Just t' <- [rewrite r t]] of
+applyFirst rs t = case [t' | rule <- rs, Just t' <- [rewrite rule t]] of
     t':_ -> t'
     _    -> t
 
 -- | Apply a list of rules bottom-up across a term
 --
 -- This function assumes that there are no applications of meta-variables in `LHS` or `RHS`.
-bottomUp :: (Traversable f, EqF f) => [Rule (LHS f) (RHS f)] -> Term f -> Term f
-bottomUp rs = applyFirst rs . Term . fmap (bottomUp rs) . unTerm
+bottomUp :: (Functor f, Foldable f, EqF f) => (Term f -> Term f) -> Term f -> Term f
+bottomUp rew = rew . Term . fmap (bottomUp rew) . unTerm
 
 -- | Apply a list of rules top-down across a term
 --
 -- This function assumes that there are no applications of meta-variables in `LHS` or `RHS`.
-topDown :: (Traversable f, EqF f) => [Rule (LHS f) (RHS f)] -> Term f -> Term f
-topDown rs = Term . fmap (topDown rs) . unTerm . applyFirst rs
+topDown :: (Functor f, Foldable f, EqF f) => (Term f -> Term f) -> Term f -> Term f
+topDown rew = Term . fmap (topDown rew) . unTerm . rew
 

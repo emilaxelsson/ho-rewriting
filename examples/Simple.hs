@@ -139,17 +139,17 @@ expr1 :: Expr Integer
 expr1 = 0 + 4
 
 draw1  = drawTerm $ unExpr expr1
-draw1R = drawTerm $ bottomUp rules (unExpr expr1)
+draw1R = drawTerm $ bottomUp (applyFirst rules) (unExpr expr1)
 
 expr2 :: Expr Integer
 expr2 = (5 + 5 + 3) + (0 + 4)
 
 draw2  = drawTerm $ unExpr expr2
-draw2R = drawTerm $ bottomUp rules (unExpr expr2)
+draw2R = drawTerm $ bottomUp (applyFirst rules) (unExpr expr2)
 
 expr3 :: Expr Integer
 expr3 = cond (0 === 1) (5+5) (5*2)
 
 draw3  = drawTerm $ unExpr expr3
-draw3R = drawTerm $ bottomUp rules (unExpr expr3)
+draw3R = drawTerm $ bottomUp (applyFirst rules) (unExpr expr3)
 
