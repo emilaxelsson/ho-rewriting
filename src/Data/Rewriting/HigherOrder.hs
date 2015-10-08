@@ -320,3 +320,17 @@ bottomUp
     -> Term g
 bottomUp rew = rew . Term . fmap (bottomUp rew) . unTerm
 
+-- | Apply a list of rules top-down across a term
+topDown
+    :: ( VAR :<: f
+       , LAM :<: f
+       , VAR :<: PF (LHS f)
+       , LAM :<: PF (LHS f)
+       , Functor f, Foldable f, EqF f
+       , g ~ (f :&: Set Name)
+       )
+    => (Term g -> Term g)  -- ^ Node rewriter
+    -> Term g
+    -> Term g
+topDown rew = Term . fmap (topDown rew) . unTerm . rew
+
