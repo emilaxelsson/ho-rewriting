@@ -80,11 +80,8 @@ rulesFeld = rules ++
     , quantify rule_for3
     ]
 
-stripAnn :: Functor f => Term (f :&: a) -> Term f
-stripAnn = cata (\(f :&: _) -> Term f)
-
 simplify :: Data a -> Data a
-simplify = Data . stripAnn . bottomUp (applyFirst app rulesFeld) . unData
+simplify = Data . withRewriter (bottomUp (applyFirst app rulesFeld)) . unData
 
 forExample :: Data Int -> Data Int
 forExample a

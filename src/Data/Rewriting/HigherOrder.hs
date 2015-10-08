@@ -225,8 +225,7 @@ annFreeVars f
     | Just (Var v) <- proj f = Term (inj (Var v) :&: Set.singleton v)
 annFreeVars f
     | Just (Lam v a) <- proj f
-    , vars <- getAnn a
-    = Term (inj (Lam v a) :&: Set.delete v vars)
+    = Term (inj (Lam v a) :&: Set.delete v (getAnn a))
 annFreeVars f = Term (f :&: Foldable.foldMap getAnn f)
 
 -- | Capture-avoiding substitution. Succeeds iff. each meta-variable in 'RHS' has a mapping in the
@@ -252,6 +251,26 @@ substitute app subst = cataM go . unRHS
     go (Inr f) = return $ annFreeVars f
   -- TODO Should avoid capturing
 
+-- | Prepare a term for rewriting by annotating each node with its set of free
+-- variables
+prepare :: (VAR :<: f, LAM :<: f, Functor f, Foldable f) => Term f -> Term (f :&: Set Name)
+prepare = cata annFreeVars
+
+-- | Strip out the annotations from a term
+stripAnn :: Functor f => Term (f :&: a) -> Term f
+stripAnn = cata (\(f :&: _) -> Term f)
+
+-- | Apply a higher-order rewriter to a term
+withRewriter
+    :: ( VAR :<: f
+       , LAM :<: f
+       , Functor f
+       , Foldable f
+       , g ~ (f :&: Set Name)
+       )
+    => (Term g -> Term g) -> Term f -> Term f
+withRewriter rew = stripAnn . rew . prepare
+
 -- | Apply a rule. Succeeds iff. both matching and substitution succeeds.
 rewrite
     :: ( VAR :<: f
@@ -263,8 +282,8 @@ rewrite
        )
     => (Term g -> Term g -> Term g)  -- ^ Application operator
     -> Rule (LHS f) (RHS f)
-    -> Term (f :&: Set Name)
-    -> Maybe (Term (f :&: Set Name))
+    -> Term g
+    -> Maybe (Term g)
 rewrite app (Rule lhs rhs) t = do
     subst <- match lhs t
     substitute app subst rhs
@@ -293,11 +312,11 @@ bottomUp
        , LAM :<: f
        , VAR :<: PF (LHS f)
        , LAM :<: PF (LHS f)
-       , Traversable f, EqF f
+       , Functor f, Foldable f, EqF f
        , g ~ (f :&: Set Name)
        )
-    => (Term g -> Term g) -- ^ Node rewriter
-    -> Term f
+    => (Term g -> Term g)  -- ^ Node rewriter
     -> Term g
-bottomUp rew = rew . annFreeVars . fmap (bottomUp rew) . unTerm
+    -> Term g
+bottomUp rew = rew . Term . fmap (bottomUp rew) . unTerm
 
