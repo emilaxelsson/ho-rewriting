@@ -297,9 +297,9 @@ stripAnn = cata (\(f :&: _) -> Term f)
 
 -- | Apply a higher-order rewriter to a term
 --
--- Typically used as @`withRewriter` (`bottomUp` (`applyFirst` ...)) :: (...) => Term f -> Term f@,
+-- Typically used as @`rewriteWith` (`bottomUp` (`applyFirst` ...)) :: (...) => Term f -> Term f@,
 -- where @f@ is not annotated
-withRewriter
+rewriteWith
     :: ( VAR :<: f
        , LAM :<: f
        , Functor f
@@ -307,5 +307,5 @@ withRewriter
        , g ~ (f :&: Set Name)
        )
     => (Term g -> Term g) -> Term f -> Term f
-withRewriter rew = stripAnn . rew . prepare
+rewriteWith rew = stripAnn . rew . prepare
 

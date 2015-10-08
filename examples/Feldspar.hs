@@ -82,7 +82,7 @@ rulesFeld = rules ++
     ]
 
 simplify :: Data a -> Data a
-simplify = Data . withRewriter (bottomUp (applyFirst app rulesFeld)) . unData
+simplify = Data . rewriteWith (bottomUp (applyFirst app rulesFeld)) . unData
 
 forExample :: Data Int -> Data Int
 forExample a
