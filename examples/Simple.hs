@@ -31,13 +31,13 @@ import Data.Rewriting.FirstOrder
 -- Using the `Num` class as a tagless DSL:
 
 -- 0 + x  ===>  x
-rule_add1 x = 0 + mvar x  ===>  mvar x
+rule_add1 x = 0 + meta x  ===>  meta x
 
 -- x + x  ===>  x*2
-rule_add2 x = mvar x + mvar x  ===>  mvar x * 2
+rule_add2 x = meta x + meta x  ===>  meta x * 2
 
 -- x - x  ===>  0
-rule_sub x = mvar x - mvar x  ===>  0
+rule_sub x = meta x - meta x  ===>  0
 
 -- 0 * x  ===>  0
 rule_mul = 0 * __  ===>  (0 -:: tCon tInteger)
@@ -55,19 +55,19 @@ class Logic r
     cond  :: r Bool -> r a -> r a -> r a
 
 -- not (not x)  ===>  x
-rule_not x = noT (noT (mvar x))  ===>  mvar x
+rule_not x = noT (noT (meta x))  ===>  meta x
 
 -- false <&> x  ===>  false
-rule_and x = false <&> mvar x  ===>  false
+rule_and x = false <&> meta x  ===>  false
 
 -- x === x  ===>  true
-rule_eq x = mvar x === mvar x  ===>  true
+rule_eq x = meta x === meta x  ===>  true
 
 -- cond _ tf tf  ===>  tf
-rule_cond1 tf = cond __ (mvar tf) (mvar tf)  ===>  mvar tf
+rule_cond1 tf = cond __ (meta tf) (meta tf)  ===>  meta tf
 
 -- cond (not c) t f  ===>  cond c f t
-rule_cond2 c t f = cond (noT (mvar c)) (mvar t) (mvar f)  ===>  cond (mvar c) (mvar f) (mvar t)
+rule_cond2 c t f = cond (noT (meta c)) (meta t) (meta f)  ===>  cond (meta c) (meta f) (meta t)
 
 data NUM a
     = Num Integer

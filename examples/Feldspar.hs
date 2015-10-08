@@ -64,15 +64,15 @@ forLoop :: (ForLoop r, Bind r) => r Int -> r s -> (Var r Int -> Var r s -> r s) 
 forLoop len init body = forLoop_ len init (lam $ \i -> lam $ \s -> body i s)
 
 -- forLoop 0 init _  ===>  init
-rule_for1 init = forLoop 0 (mvar init) (\i s -> __)  ===>  mvar init
+rule_for1 init = forLoop 0 (meta init) (\i s -> __)  ===>  meta init
 
 -- forLoop 0 init (\i s -> s)  ===>  init
-rule_for2 init = forLoop __ (mvar init) (\i s -> var s)  ===>  mvar init
+rule_for2 init = forLoop __ (meta init) (\i s -> var s)  ===>  meta init
 
 rule_for3 len init body =
-    forLoop (mvar len) (mvar init) (\i s -> body -$- i)
+    forLoop (meta len) (meta init) (\i s -> body -$- i)
       ===>
-    cond (mvar len === 0) (mvar init) (body -$- (mvar len - 1))
+    cond (meta len === 0) (meta init) (body -$- (meta len - 1))
 
 rulesFeld = rules ++
     [ quantify rule_for1

@@ -61,8 +61,8 @@ class MetaVar r
 -- TODO Move `MetaRep` and `MetaArg` out of the class as in the paper?
 
 -- | Construct a meta-variable
-mvar :: MetaVar r => MetaRep r a -> r a
-mvar = metaExp . MVar
+meta :: MetaVar r => MetaRep r a -> r a
+meta = metaExp . MVar
 
 -- | Meta-variable application (used for all but the first and last variable)
 ($$) :: MetaExp r (a -> b) -> MetaArg r a -> MetaExp r b
