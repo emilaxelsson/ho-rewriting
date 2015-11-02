@@ -58,8 +58,6 @@ class MetaVar r
     type MetaArg r :: * -> *
     metaExp :: MetaExp r a -> r a
 
--- TODO Move `MetaRep` and `MetaArg` out of the class as in the paper?
-
 -- | Construct a meta-variable
 meta :: MetaVar r => MetaRep r a -> r a
 meta = metaExp . MVar
