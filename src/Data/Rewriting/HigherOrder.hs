@@ -228,11 +228,43 @@ annFreeVars f
     = Term (inj (Lam v a) :&: Set.delete v (getAnn a))
 annFreeVars f = Term (f :&: Foldable.foldMap getAnn f)
 
--- | Capture-avoiding substitution. Succeeds iff. each meta-variable in 'RHS' has a mapping in the
--- substitution.
+-- | Environment for aliases
+type Aliases = (Map Name Name, Name)
+  -- Invariant: The second component of the pair is a name that is greater than
+  -- all names in the co-domain of the map.
+
+-- | Set up an initial alias environment from a set of reserved names
+initAliases :: Set Name -> Aliases
+initAliases ns = (mp,next)
+  where
+    mp   = Map.fromList [(n,n) | n <- Set.toList ns]
+    next = Set.findMax (Set.insert (-1) ns) + 1
+
+-- | Rename to a fresh name
+rename :: Name -> Aliases -> (Name,Aliases)
+rename n (mp,next) = case Map.lookup n mp of
+    Nothing -> (n, (Map.insert n n mp, max next (n+1)))
+    Just _  -> (next, (Map.insert n next mp, next + 1))
+
+-- | Naive renaming. Use instead of 'rename' to get naive substitution.
+renameNaive :: Name -> Aliases -> (Name,Aliases)
+renameNaive n (mp,next) = (n, (Map.insert n n mp, max next (n+1)))
+
+-- | Lookup a name in an alias environment
+lookAlias :: Name -> Aliases -> Maybe Name
+lookAlias n (mp,_) = Map.lookup n mp
+
+-- | Capture-avoiding substitution. Succeeds iff. each meta-variable in 'RHS'
+-- has a mapping in the substitution.
+--
+-- Uses the "rapier" method described in "Secrets of the Glasgow Haskell
+-- Compiler inliner" (Peyton Jones and Marlow, JFP 2006) to rename variables
+-- where there's risk for capturing.
 substitute :: forall f g a
     .  ( VAR :<: f
        , LAM :<: f
+       , VAR :<: PF (RHS f)
+       , LAM :<: PF (RHS f)
        , Traversable f
        , g ~ (f :&: Set Name)
        )
@@ -240,16 +272,33 @@ substitute :: forall f g a
     -> Subst g
     -> RHS f a
     -> Maybe (Term g)
-substitute app subst = cataM go . unRHS
+substitute app subst rhs = go (initAliases (Set.union fvS fvR)) (unRHS rhs)
   where
-    go :: PF (RHS f) (Term g) -> Maybe (Term g)
-    go (Inl (Meta mv)) = goo mv
+    -- Free variables in the co-domain of the substitution
+    fvS = Foldable.fold [fv | (_, Term (_ :&: fv)) <- subst]
+
+    -- Free variables in the RHS
+    Term (_ :&: fvR) = cata annFreeVars $ unRHS rhs
+      -- It's usually strange to have free variables in the RHS since then the
+      -- meaning of the rule depends on the context. But we take care of that
+      -- situation here anyway.
+
+    go :: Aliases -> Term (PF (RHS f)) -> Maybe (Term g)
+    go aliases (Term (Inl (Meta mv))) = goo mv
       where
         goo :: MetaExp (RHS f) b -> Maybe (Term g)
         goo (MVar (MetaId v)) = lookup v subst
-        goo (MApp mv t)       = liftM2 app (goo mv) $ cataM go (unRHS t)
-    go (Inr f) = return $ annFreeVars f
-  -- TODO Should avoid capturing
+        goo (MApp mv t)       = liftM2 app (goo mv) $ go aliases (unRHS t)
+    go aliases t
+        | Just (Var v) <- project t
+        , Just v'      <- lookAlias v aliases
+        = Just $ Term (inj (Var v') :&: Set.singleton v')
+    go aliases t
+        | Just (Lam v body) <- project t = do
+            let (v',aliases') = rename v aliases
+            body'@(Term (_ :&: fv)) <- go aliases' body
+            return $ Term (inj (Lam v' body') :&: Set.delete v' fv)
+    go aliases (Term (Inr f)) = fmap annFreeVars $ traverse (go aliases) f
 
 -- | Apply a rule. Succeeds iff. both matching and substitution succeeds.
 rewrite
@@ -257,6 +306,8 @@ rewrite
        , LAM :<: f
        , VAR :<: PF (LHS f)
        , LAM :<: PF (LHS f)
+       , VAR :<: PF (RHS f)
+       , LAM :<: PF (RHS f)
        , Traversable f, EqF f
        , g ~ (f :&: Set Name)
        )
@@ -275,6 +326,8 @@ applyFirst
        , LAM :<: f
        , VAR :<: PF (LHS f)
        , LAM :<: PF (LHS f)
+       , VAR :<: PF (RHS f)
+       , LAM :<: PF (RHS f)
        , Traversable f, EqF f
        , g ~ (f :&: Set Name)
        )
