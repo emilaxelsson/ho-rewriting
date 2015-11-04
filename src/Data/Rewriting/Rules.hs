@@ -13,12 +13,7 @@ module Data.Rewriting.Rules where
 
 
 
-import Control.Applicative (pure)
-import qualified Data.Foldable as Fold
-import Data.Traversable (Traversable (traverse))
-
 import Data.Comp
-import Data.Comp.Derive
 import Data.Comp.Ops
 import Data.Patch
 

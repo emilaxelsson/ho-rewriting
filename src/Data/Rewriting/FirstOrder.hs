@@ -7,10 +7,8 @@ module Data.Rewriting.FirstOrder where
 
 import Control.Monad.Reader
 import Control.Monad.Writer
-import Data.Foldable (Foldable)
 import Data.Function (on)
 import Data.List (groupBy)
-import Data.Traversable (Traversable)
 
 import Data.Comp
 import Data.Comp.Ops
