@@ -69,12 +69,12 @@ library
   default-language:
     Haskell2010
 
-test-suite examples
+test-suite capture
   type: exitcode-stdio-1.0
 
-  hs-source-dirs: examples
+  hs-source-dirs: examples, tests
 
-  main-is: Feldspar.hs
+  main-is: Capture.hs
 
   build-depends:
     base,
@@ -83,3 +83,4 @@ test-suite examples
     patch-combinators
 
   default-language: Haskell2010
+
