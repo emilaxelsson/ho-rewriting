@@ -16,9 +16,7 @@ module Feldspar where
 
 
 
-import Data.Comp
-import Data.Comp.Derive
-import Data.Comp.Render
+import Data.Comp.Fixplate
 
 import Data.Rewriting.Rules
 import Data.Rewriting.FirstOrder hiding (applyFirst)
@@ -31,9 +29,11 @@ import Simple
 data FORLOOP a = ForLoop a a a
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
-derive [makeEqF, makeShowF, makeShowConstr] [''FORLOOP]
+deriveEq1 ''FORLOOP
+deriveShow1 ''FORLOOP
 
-instance Render FORLOOP
+instance EqF FORLOOP where equalF = defaultEqualF
+instance ShowF FORLOOP where showsPrecF = defaultShowsPrecF
 
 type Feld = VAR :+: LAM :+: APP :+: NUM :+: LOGIC :+: FORLOOP
 
@@ -91,30 +91,30 @@ forExample a
     = forLoop a a (\i s -> (i-i)+s)
     + forLoop a a (\i s -> i*i+100)
 
-drawForExample  = drawTerm $ unData $ lam forExample
-drawForExampleR = drawTerm $ unData $ simplify $ lam forExample
+drawForExample  = drawTermU $ unData $ lam forExample
+drawForExampleR = drawTermU $ unData $ simplify $ lam forExample
 
 feld1 :: Data Int -> Data Int
 feld1 a = a + a + 3
 
-drawFeld1  = drawTerm $ unData $ lam feld1
-drawFeld1R = drawTerm $ unData $ simplify $ lam feld1
+drawFeld1  = drawTermU $ unData $ lam feld1
+drawFeld1R = drawTermU $ unData $ simplify $ lam feld1
 
 feld2 :: Data Int
 feld2 = forLoop 0 0 (+)
 
-drawFeld2  = drawTerm $ unData feld2
-drawFeld2R = drawTerm $ unData $ simplify feld2
+drawFeld2  = drawTermU $ unData feld2
+drawFeld2R = drawTermU $ unData $ simplify feld2
 
 feld3 :: Data Int -> Data Int
 feld3 a = forLoop a 0 (\i s -> a+i)
 
-drawFeld3  = drawTerm $ unData $ lam feld3
-drawFeld3R = drawTerm $ unData $ simplify $ lam feld3
+drawFeld3  = drawTermU $ unData $ lam feld3
+drawFeld3R = drawTermU $ unData $ simplify $ lam feld3
 
 feld4 :: Data Int -> Data Int
 feld4 a = forLoop a 0 (\i s -> a + i + s) + forLoop a 0 (\i s -> a + i + s)
 
-drawFeld4  = drawTerm $ unData $ lam feld4
-drawFeld4R = drawTerm $ unData $ simplify $ lam feld4
+drawFeld4  = drawTermU $ unData $ lam feld4
+drawFeld4R = drawTermU $ unData $ simplify $ lam feld4
 

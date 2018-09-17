@@ -19,7 +19,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Emil Axelsson
 maintainer:          78emil@gmail.com
-copyright:           Copyright (c) 2015, Emil Axelsson
+copyright:           Copyright (c) 2015-2018, Emil Axelsson
 category:            Language
 build-type:          Simple
 extra-source-files:  README.md
@@ -44,7 +44,8 @@ library
   build-depends:
     base >=4.7 && <5,
     containers,
-    compdata ==0.10.*,
+    compdata-fixplate,
+    fixplate,
     mtl,
     patch-combinators
 
@@ -73,9 +74,12 @@ test-suite capture
 
   main-is: Capture.hs
 
+  other-modules: Simple
+                 Feldspar
+
   build-depends:
     base,
-    compdata,
+    compdata-fixplate,
     ho-rewriting,
     patch-combinators
 

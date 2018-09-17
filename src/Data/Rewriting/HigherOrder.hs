@@ -12,15 +12,13 @@ import Control.Monad.Writer
 import qualified Data.Foldable as Foldable
 import Data.Function (on)
 import Data.List (groupBy)
+import Data.Generics.Fixplate.Morphisms (cata)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import Data.Comp
-import Data.Comp.Derive
-import Data.Comp.Ops
-import Data.Comp.Render
+import Data.Comp.Fixplate
 
 import Data.Rewriting.Rules
 
@@ -44,13 +42,23 @@ data LAM a = Lam Name a
 data APP a = App a a
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
-derive [makeEqF, makeShowF, makeShowConstr] [''VAR]
-derive [makeEqF, makeShowF, makeShowConstr] [''LAM]
-derive [makeEqF, makeShowF, makeShowConstr] [''APP]
+deriveEq1 ''VAR
+deriveShow1 ''VAR
 
-instance Render VAR
-instance Render LAM
-instance Render APP
+instance EqF VAR where equalF = defaultEqualF
+instance ShowF VAR where showsPrecF = defaultShowsPrecF
+
+deriveEq1 ''LAM
+deriveShow1 ''LAM
+
+instance EqF LAM where equalF = defaultEqualF
+instance ShowF LAM where showsPrecF = defaultShowsPrecF
+
+deriveEq1 ''APP
+deriveShow1 ''APP
+
+instance EqF APP where equalF = defaultEqualF
+instance ShowF APP where showsPrecF = defaultShowsPrecF
 
 fresh :: (LAM :<: f, Functor f, Foldable f) => Term f -> Name
 fresh f
@@ -136,9 +144,9 @@ matchM :: forall f a
     -> ReaderT AlphaEnv (WriterT (Subst (f :&: Set Name)) Maybe) ()
 matchM (LHS lhs) t = go lhs t
   where
-    go (Term (Inl WildCard)) _ = return ()
+    go (Term (InR WildCard)) _ = return ()
 
-    go (Term (Inr (Inl (Meta mv)))) t = ReaderT $ \env -> goo env mv t
+    go (Term (InL (InR (Meta mv)))) t = ReaderT $ \env -> goo env mv t
       where
         goo :: AlphaEnv
             -> MetaExp (LHS f) b
@@ -157,7 +165,7 @@ matchM (LHS lhs) t = go lhs t
 
     go p (Term (g :&: _))
       | Just (Var v) <- project p
-      , Just (Var w) <- proj g
+      , Just (Var w) <- prj g
       = do
           env <- ask
           guard ((v,w) `oMember` env)
@@ -165,10 +173,10 @@ matchM (LHS lhs) t = go lhs t
 
     go p (Term (g :&: _))
       | Just (Lam v a) <- project p
-      , Just (Lam w b) <- proj g
+      , Just (Lam w b) <- prj g
       = local (oInsert (v,w)) $ go a b
 
-    go (Term (Inr (Inr f))) (Term (g :&: _))
+    go (Term (InL (InL f))) (Term (g :&: _))
       | Just subs <- eqMod f g
       = mapM_ (uncurry go) subs
 
@@ -194,7 +202,7 @@ alphaEq a b = runReader (go a b) oEmpty
 -- | Check if all terms are alpha-equivalent, and if so, return one of them
 solveTermAlpha :: (VAR :<: f, LAM :<: f, Functor f, Foldable f, EqF f) =>
     [Term (f :&: a)] -> Maybe (Term (f :&: a))
-solveTermAlpha (t:ts) = guard (all (alphaEq (stripA t)) (map stripA ts)) >> return t
+solveTermAlpha (t:ts) = guard (all (alphaEq (stripAnn t)) (map stripAnn ts)) >> return t
 solveTermAlpha _      = Nothing
 
 -- | Turn a list of candidate mappings into a substitution. Succeeds iff. all mappings for the same
@@ -222,9 +230,9 @@ match lhs = solveSubstAlpha <=< execWriterT . flip runReaderT oEmpty . matchM lh
 annFreeVars :: (VAR :<: f, LAM :<: f, Functor f, Foldable f) =>
     f (Term (f :&: Set Name)) -> Term (f :&: Set Name)
 annFreeVars f
-    | Just (Var v) <- proj f = Term (inj (Var v) :&: Set.singleton v)
+    | Just (Var v) <- prj f = Term (inj (Var v) :&: Set.singleton v)
 annFreeVars f
-    | Just (Lam v a) <- proj f
+    | Just (Lam v a) <- prj f
     = Term (inj (Lam v a) :&: Set.delete v (getAnn a))
 annFreeVars f = Term (f :&: Foldable.foldMap getAnn f)
 
@@ -252,7 +260,7 @@ renameNaive n (mp,next) = (n, (Map.insert n n mp, max next (n+1)))
 
 -- | Lookup a name in an alias environment
 lookAlias :: Name -> Aliases -> Maybe Name
-lookAlias n (mp,_) = Map.lookup n mp
+lookAlias n = Map.lookup n . fst
 
 -- | Capture-avoiding substitution. Succeeds iff. each meta-variable in 'RHS'
 -- has a mapping in the substitution.
@@ -284,7 +292,7 @@ substitute app subst rhs = go (initAliases (Set.union fvS fvR)) (unRHS rhs)
       -- situation here anyway.
 
     go :: Aliases -> Term (PF (RHS f)) -> Maybe (Term g)
-    go aliases (Term (Inl (Meta mv))) = goo mv
+    go aliases (Term (InR (Meta mv))) = goo mv
       where
         goo :: MetaExp (RHS f) b -> Maybe (Term g)
         goo (MVar (MetaId v)) = lookup v subst
@@ -298,7 +306,7 @@ substitute app subst rhs = go (initAliases (Set.union fvS fvR)) (unRHS rhs)
             let (v',aliases') = rename v aliases
             body'@(Term (_ :&: fv)) <- go aliases' body
             return $ Term (inj (Lam v' body') :&: Set.delete v' fv)
-    go aliases (Term (Inr f)) = fmap annFreeVars $ traverse (go aliases) f
+    go aliases (Term (InL f)) = fmap annFreeVars $ traverse (go aliases) f
 
 -- | Apply a rule. Succeeds iff. both matching and substitution succeeds.
 rewrite

@@ -17,9 +17,7 @@ module Simple where
 
 
 
-import Data.Comp
-import Data.Comp.Derive
-import Data.Comp.Render
+import Data.Comp.Fixplate
 import Data.Patch
   -- Could use partial type signatures instead (on GHC >= 7.10)
 
@@ -76,9 +74,11 @@ data NUM a
     | Mul a a
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
-derive [makeEqF, makeShowF, makeShowConstr] [''NUM]
+deriveEq1 ''NUM
+deriveShow1 ''NUM
 
-instance Render NUM
+instance EqF NUM where equalF = defaultEqualF
+instance ShowF NUM where showsPrecF = defaultShowsPrecF
 
 data LOGIC a
     = Bool Bool
@@ -88,9 +88,11 @@ data LOGIC a
     | Cond a a a
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
-derive [makeEqF, makeShowF, makeShowConstr] [''LOGIC]
+deriveEq1 ''LOGIC
+deriveShow1 ''LOGIC
 
-instance Render LOGIC
+instance EqF LOGIC where equalF = defaultEqualF
+instance ShowF LOGIC where showsPrecF = defaultShowsPrecF
 
 type Lang = NUM :+: LOGIC
 
@@ -138,18 +140,18 @@ rules =
 expr1 :: Expr Integer
 expr1 = 0 + 4
 
-draw1  = drawTerm $ unExpr expr1
-draw1R = drawTerm $ bottomUp (applyFirst rules) (unExpr expr1)
+draw1  = drawTermU $ unExpr expr1
+draw1R = drawTermU $ bottomUp (applyFirst rules) (unExpr expr1)
 
 expr2 :: Expr Integer
 expr2 = (5 + 5 + 3) + (0 + 4)
 
-draw2  = drawTerm $ unExpr expr2
-draw2R = drawTerm $ bottomUp (applyFirst rules) (unExpr expr2)
+draw2  = drawTermU $ unExpr expr2
+draw2R = drawTermU $ bottomUp (applyFirst rules) (unExpr expr2)
 
 expr3 :: Expr Integer
 expr3 = cond (0 === 1) (5+5) (5*2)
 
-draw3  = drawTerm $ unExpr expr3
-draw3R = drawTerm $ bottomUp (applyFirst rules) (unExpr expr3)
+draw3  = drawTermU $ unExpr expr3
+draw3R = drawTermU $ bottomUp (applyFirst rules) (unExpr expr3)
 

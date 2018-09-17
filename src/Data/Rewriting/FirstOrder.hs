@@ -9,9 +9,9 @@ import Control.Monad.Reader
 import Control.Monad.Writer
 import Data.Function (on)
 import Data.List (groupBy)
+import Data.Generics.Fixplate.Morphisms (cataM)
 
-import Data.Comp
-import Data.Comp.Ops
+import Data.Comp.Fixplate
 
 import Data.Rewriting.Rules
 
@@ -23,9 +23,9 @@ import Data.Rewriting.Rules
 matchM :: (Functor f, Foldable f, EqF f) => LHS f a -> Term f -> WriterT (Subst f) Maybe ()
 matchM (LHS lhs) t = go lhs t
   where
-    go (Term (Inl WildCard)) _                       = return ()
-    go (Term (Inr (Inl (Meta (MVar (MetaId v)))))) t = tell [(v,t)]
-    go (Term (Inr (Inr f))) (Term g)
+    go (Term (InR WildCard)) _                       = return ()
+    go (Term (InL (InR (Meta (MVar (MetaId v)))))) t = tell [(v,t)]
+    go (Term (InL (InL f))) (Term g)
       | Just subs <- eqMod f g                       = mapM_ (uncurry go) subs
     go _ _                                           = fail "No match"
 
@@ -56,8 +56,8 @@ match lhs = solveSubst <=< execWriterT . matchM lhs
 substitute :: Traversable f => Subst f -> RHS f a -> Maybe (Term f)
 substitute subst = cataM go . unRHS
   where
-    go (Inl (Meta (MVar (MetaId v)))) = lookup v subst
-    go (Inr f)                        = return (Term f)
+    go (InR (Meta (MVar (MetaId v)))) = lookup v subst
+    go (InL f)                        = return (Term f)
 
 -- | Apply a rule. Succeeds iff. both matching and substitution succeeds.
 --

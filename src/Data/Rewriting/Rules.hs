@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -13,8 +14,7 @@ module Data.Rewriting.Rules where
 
 
 
-import Data.Comp
-import Data.Comp.Ops
+import Data.Comp.Fixplate
 import Data.Patch
 
 
@@ -126,14 +126,14 @@ instance Foldable    (META r) where foldr _ a _ = a
 instance Traversable (META r) where traverse _ (Meta m) = pure (Meta m)
 
 -- | Left hand side of a rule
-newtype LHS f a = LHS { unLHS :: Term (WILD :+: META (LHS f) :+: f) }
+newtype LHS f a = LHS { unLHS :: Term (f :+: META (LHS f) :+: WILD) }
 
 -- | Right hand side of a rule
-newtype RHS f a = RHS { unRHS :: Term (META (RHS f) :+: f) }
+newtype RHS f a = RHS { unRHS :: Term (f :+: META (RHS f)) }
 
 instance WildCard (LHS f)
   where
-    __ = LHS $ Term $ Inl WildCard
+    __ = LHS $ Term $ InR WildCard
 
 -- | Representation of object variables
 type family Var (r :: * -> *) :: * -> *
@@ -142,13 +142,13 @@ instance MetaVar (LHS f)
   where
     type MetaRep (LHS f) = MetaId
     type MetaArg (LHS f) = Var (LHS f)
-    metaExp = LHS . Term . Inr . Inl . Meta
+    metaExp = LHS . Term . InL . InR . Meta
 
 instance MetaVar (RHS f)
   where
     type MetaRep (RHS f) = MetaId
     type MetaArg (RHS f) = RHS f
-    metaExp = RHS . Term . Inl . Meta
+    metaExp = RHS . Term . InR . Meta
 
 
 
@@ -164,13 +164,13 @@ class Rep r
 
 instance Rep (LHS f)
   where
-    type PF (LHS f) = WILD :+: META (LHS f) :+: f
+    type PF (LHS f) = f :+: META (LHS f) :+: WILD
     toRep   = LHS
     fromRep = unLHS
 
 instance Rep (RHS f)
   where
-    type PF (RHS f) = META (RHS f) :+: f
+    type PF (RHS f) = f :+: META (RHS f)
     toRep   = RHS
     fromRep = unRHS
 

@@ -6,8 +6,7 @@
 
 import System.Exit
 
-import Data.Comp
--- import Data.Comp.Render
+import Data.Comp.Fixplate
 import Data.Patch
   -- Could use partial type signatures instead (on GHC >= 7.10)
 
