@@ -10,8 +10,8 @@ module Data.Rewriting.HigherOrder where
 import Control.Monad.Reader
 import Control.Monad.Writer
 import qualified Data.Foldable as Foldable
+import Data.Bifunctor (second)
 import Data.Function (on)
-import Data.List (groupBy)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Set (Set)
@@ -201,10 +201,11 @@ solveTermAlpha _      = Nothing
 -- variable are alpha-equivalent.
 solveSubstAlpha :: (VAR :<: f, LAM :<: f, Functor f, Foldable f, EqF f) =>
     Subst (f :&: a) -> Maybe (Subst (f :&: a))
-solveSubstAlpha s = sequence [fmap (v,) $ solveTermAlpha ts | g <- gs, let (v:_,ts) = unzip g]
-  where
-    gs = groupBy ((==) `on` fst) s
-      -- TODO Make O(n * log n)
+solveSubstAlpha s =
+  sequence
+    [ fmap (v, ) $ solveTermAlpha ts
+    | (v, ts) <- Map.toList $ Map.fromListWith (++) $ map (second pure) s
+    ]
 
 -- | Higher-order matching. Succeeds if the pattern matches and all occurrences of a given
 -- meta-variable are matched against equal terms.
