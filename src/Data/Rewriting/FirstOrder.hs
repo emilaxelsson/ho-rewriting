@@ -7,9 +7,11 @@ module Data.Rewriting.FirstOrder where
 
 import Control.Monad.Reader
 import Control.Monad.Writer
+import Data.Bifunctor (second)
 import Data.Function (on)
-import Data.List (groupBy)
 import Data.Generics.Fixplate.Morphisms (cataM)
+import Data.Map (Map)
+import qualified Data.Map as Map
 
 import Data.Comp.Fixplate
 
@@ -37,10 +39,11 @@ solveTerm _      = Nothing
 -- | Turn a list of candidate mappings into a substitution. Succeeds iff. all mappings for the same
 -- variable are equal.
 solveSubst :: EqF f => [(Name, Term f)] -> Maybe (Subst f)
-solveSubst s = sequence [fmap (v,) $ solveTerm ts | g <- gs, let (v:_,ts) = unzip g]
-  where
-    gs = groupBy ((==) `on` fst) s
-      -- TODO Make O(n * log n)
+solveSubst s =
+  sequence
+    [ fmap (v, ) $ solveTerm ts
+    | (v, ts) <- Map.toList $ Map.fromListWith (++) $ map (second pure) s
+    ]
 
 -- | First-order matching. Succeeds if the pattern matches and all occurrences of a given
 -- meta-variable are matched against equal terms.
