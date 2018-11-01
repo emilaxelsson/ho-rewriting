@@ -44,7 +44,7 @@ library
   build-depends:
     base >=4.7 && <5,
     containers,
-    compdata ==0.10.*,
+    compdata <=0.12,
     mtl,
     patch-combinators
 
