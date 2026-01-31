@@ -16,6 +16,7 @@ module Data.Rewriting.Rules where
 import Data.Comp
 import Data.Comp.Ops
 import Data.Patch
+import Data.Kind (Type)
 
 
 
@@ -49,8 +50,8 @@ data MetaExp r a
 class MetaVar r
   where
     -- Representation of meta-variable identifiers
-    type MetaRep r :: * -> *
-    type MetaArg r :: * -> *
+    type MetaRep r :: Type -> Type
+    type MetaArg r :: Type -> Type
     metaExp :: MetaExp r a -> r a
 
 -- | Construct a meta-variable
@@ -136,7 +137,7 @@ instance WildCard (LHS f)
     __ = LHS $ Term $ Inl WildCard
 
 -- | Representation of object variables
-type family Var (r :: * -> *) :: * -> *
+type family Var (r :: Type -> Type) :: Type -> Type
 
 instance MetaVar (LHS f)
   where
@@ -158,7 +159,7 @@ instance MetaVar (RHS f)
 
 class Rep r
   where
-    type PF r :: * -> *
+    type PF r :: Type -> Type
     toRep   :: Term (PF r) -> r a
     fromRep :: r a -> Term (PF r)
 
