@@ -7,6 +7,7 @@ module Data.Rewriting.HigherOrder where
 
 
 
+import Control.Monad (guard, liftM2, (<=<))
 import Control.Monad.Reader
 import Control.Monad.Writer
 import qualified Data.Foldable as Foldable

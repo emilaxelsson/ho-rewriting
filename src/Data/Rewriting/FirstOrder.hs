@@ -5,6 +5,7 @@ module Data.Rewriting.FirstOrder where
 
 
 
+import Control.Monad (guard, (<=<))
 import Control.Monad.Reader
 import Control.Monad.Writer
 import Data.Bifunctor (second)
